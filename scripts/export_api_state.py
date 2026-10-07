@@ -98,7 +98,7 @@ def main() -> None:
     META_FILE.write_text(json.dumps({
         "as_of": str(as_of.date()), "regime_date": str(panel.regime_all.index[-1].date()),
         "baseline_assets": base.assets, "baseline_nu": base.nu,
-        "mdn_file": model_path(latest_year).name, "mdn_trained_through": f"{latest_year - 1}-12-31",
+        "mdn_file": model_path(latest_year).name, "mdn_trained_through": str(min(as_of, pd.Timestamp(f"{latest_year - 1}-12-31")).date()),
         "factors": C.FACTORS, "factor_1_99_pct": hist_q,
         "credit_series": "BAA10Y (Moody's Baa minus 10Y Treasury)",
     }, indent=1))

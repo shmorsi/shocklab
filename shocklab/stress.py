@@ -39,11 +39,13 @@ def human_from_shock(s: np.ndarray) -> dict[str, float]:
 
 
 def histogram(samples: dict[str, np.ndarray], bins: int = N_BINS) -> tuple[np.ndarray, dict[str, np.ndarray]]:
-    """Shared bin edges (0.2%-99.8% of all samples) so models are comparable on one axis."""
+    """Shared bin edges (0.2%-99.8% of all samples) so models are comparable on one axis.
+    Densities are fractions of ALL samples; the far tails beyond the edges are not drawn
+    (clipping them into the edge bins would create fake spikes)."""
     pooled = np.concatenate(list(samples.values()))
     lo, hi = np.quantile(pooled, [0.002, 0.998])
     edges = np.linspace(lo, hi, bins + 1)
-    return edges, {k: np.histogram(np.clip(v, lo, hi), edges)[0] / len(v) for k, v in samples.items()}
+    return edges, {k: np.histogram(v, edges)[0] / len(v) for k, v in samples.items()}
 
 
 @dataclass

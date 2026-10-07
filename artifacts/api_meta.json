@@ -29,7 +29,7 @@
  ],
  "baseline_nu": 21.57956565746634,
  "mdn_file": "mdn_2027.pt",
- "mdn_trained_through": "2026-12-31",
+ "mdn_trained_through": "2026-10-02",
  "factors": [
   "oil",
   "rates",

@@ -29,7 +29,7 @@ def test_stress(client):
     for m in ("baseline", "mdn"):
         res = d["models"][m]
         assert res["cvar95"] >= res["var95"]
-        assert abs(sum(res["histogram"]) - 1) < 1e-6
+        assert 0.98 < sum(res["histogram"]) <= 1 + 1e-9  # far tails are outside the plotted range
         assert abs(sum(c["cvar_contrib"] for c in res["contributions"]) - res["cvar95"]) < 1e-6
         assert len(res["factor_attribution"]) == 7
     assert len(d["bin_edges"]) == len(d["models"]["mdn"]["histogram"]) + 1

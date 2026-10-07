@@ -6,3 +6,4 @@ data/*.parquet
 web/node_modules/
 web/.next/
 .DS_Store
+.claude/

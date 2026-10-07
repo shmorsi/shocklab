@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+/* Terminal palette. Gain/loss and model colours were checked with a CVD validator
+   against --bg (blue/orange ΔE 26+, violet/teal ΔE 13). */
+:root {
+  --bg: #0b0c0f;
+  --panel: #111318;
+  --panel-2: #161920;
+  --line: #232731;
+  --grid: #1b1f27;
+  --ink: #e7e9ec;
+  --ink-2: #a3a9b3;
+  --muted: #6b727d;
+  --amber: #f2b33d;
+  --amber-dim: #f2b33d33;
+  --gain: #3b8eea;
+  --loss: #e8682a;
+  --mdn: #8b6fd6;
+  --base: #2a9d8f;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-amber: var(--amber);
+  --color-gain: var(--gain);
+  --color-loss: var(--loss);
+  --color-mdn: var(--mdn);
+  --color-base: var(--base);
+  --font-sans: var(--font-grotesk);
+  --font-mono: var(--font-plex-mono);
+}
+
+html { color-scheme: dark; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-grotesk), system-ui, sans-serif;
+}
+.num { font-family: var(--font-plex-mono), ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+
+/* faint scanline grid behind everything */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: 0.35;
+  mask-image: radial-gradient(ellipse at top, black 20%, transparent 75%);
+  z-index: 0;
+}
+
+/* amber range sliders */
+input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; width: 100%; height: 22px; }
+input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: var(--line); }
+input[type="range"]::-moz-range-track { height: 2px; background: var(--line); }
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px; margin-top: -6px; border-radius: 2px;
+  background: var(--amber); box-shadow: 0 0 0 3px var(--amber-dim); cursor: grab;
+}
+input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border: 0; border-radius: 2px; background: var(--amber); cursor: grab; }
+input[type="range"]:focus-visible { outline: 1px dashed var(--amber); outline-offset: 4px; }
