@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+data/*.parquet
+.pytest_cache/
+web/node_modules/
+web/.next/
+.DS_Store
