@@ -2,6 +2,8 @@
 
 **Dial in a macro shock (oil, rates, USD, VIX, credit) and see the 10-day return distribution of a 24-asset portfolio, its VaR/CVaR and where the risk comes from, plus the CVaR-minimising hedge. A PyTorch mixture density network is benchmarked against a linear factor + Student-t model, with no lookahead.**
 
+**Live demo: https://shmorsi.github.io/shocklab/** runs entirely in your browser. Both models, the attribution and the CVaR optimiser (HiGHS compiled to WebAssembly) execute client-side, so there is no server and no cold start.
+
 The headline finding is a negative one. **The MDN does not beat the linear baseline out of sample.** It has worse likelihood (−45.2 vs −60.7 mean NLL) and worse likelihood in all 5 stress events. It ties the baseline on portfolio VaR breach rate and has slightly lower point error. Details below.
 
 ![Dashboard](docs/screenshots/hero.png)
@@ -47,7 +49,9 @@ flowchart LR
 | `shocklab/backtest.py` | Monthly walk-forward backtest vs equal weight, 60/40, min variance |
 | `shocklab/stress.py` | Engine behind the API (unit conversion, attribution, histograms) |
 | `api/` | FastAPI app + Pydantic schemas |
-| `web/` | Dashboard |
+| `web/` | Dashboard (talks to the API, or runs fully in the browser in static mode) |
+| `web/lib/engine.ts` | Browser port of `stress.py`: baseline + MDN forward pass, VaR/CVaR/attribution, R-U LP via HiGHS-wasm |
+| `scripts/export_static.py` | Freezes model weights + precomputed results into `web/public/data/` for the static build |
 | `tests/` | 28 pytest tests (no-lookahead, determinism, math checks, API contract) |
 
 ## How to run
@@ -60,6 +64,7 @@ make backtest   # monthly backtest 2018→today, then freeze API state (≈2 min
 make test       # pytest + tsc + eslint
 make api        # http://localhost:8000  (docs at /docs)
 make web        # http://localhost:3000
+make static     # browser-only build into web/out (what GitHub Pages serves)
 ```
 
 `artifacts/` (MDN weights, baseline parameters) and `results/` are committed, so `make api` and `make web` work straight after cloning. `data/` is gitignored. Every random draw is seeded (`SEED = 7`). Rerunning `make train backtest` reproduces the tables below exactly on the same data. Yahoo and FRED do occasionally revise history.
@@ -147,6 +152,8 @@ Everything here comes from the tables above.
 - The optimiser's 10-day CVaR objective is held for a month in the backtest, a horizon mismatch.
 
 ## Deploying
+
+**Static site → GitHub Pages (no server).** `.github/workflows/pages.yml` builds `web/` with `NEXT_PUBLIC_STATIC=1` on every push to `main`. In that mode the dashboard loads `web/public/data/engine.json` (0.7 MB: baseline α/β/Cholesky/ν, MDN weights and scalers, regime, historical factor moves) and runs the models in JavaScript. Random draws use a seeded JS generator, so numbers match the Python API statistically (e.g. MDN VaR 11.00% vs 11.00%, CVaR 11.31% vs 11.29%), not digit for digit. The optimiser uses 1,500 scenarios in the browser vs 4,000 in the API.
 
 **API → Render (Docker).** `render.yaml` is a blueprint. Create a new Blueprint from the repo, or a Web Service with runtime *Docker*. Set `CORS_ORIGINS=https://<your-app>.vercel.app`. The image installs CPU-only torch and serves the committed `artifacts/` and `results/`, so no data download happens at runtime. Health check: `/health`. Free instances sleep, so the first request takes about 30 s.
 
