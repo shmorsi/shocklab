@@ -1,4 +1,4 @@
-"""Train one walk-forward MDN per year (2018 .. next year) and save to artifacts/.
+"""Train one walk-forward MDN per year (2017 .. next year; the backtest's first decision is Dec 2017) and save to artifacts/.
 
 Model for year Y: train on windows ending <= Dec 31 of Y-3, early-stop on Y-2..Y-1
 to choose the epoch count, then refit on everything up to Dec 31 of Y-1.
@@ -26,7 +26,7 @@ def main() -> None:
     log = [{"year": "static", "train_end": C.TRAIN_END, "val_end": C.VAL_END,
             "epochs": static.epochs, "best_val_nll_std_units": round(static.best_val_nll, 3)}]
     print(log[-1])
-    for year in range(2018, last_year + 1):
+    for year in range(2017, last_year + 1):
         train_end, val_end = walk_forward_splits(year)
         m = train_mdn(panel, train_end, val_end, refit=True)
         m.save(model_path(year))

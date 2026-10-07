@@ -97,6 +97,7 @@ class Panel:
     X: pd.DataFrame  # 10d forward factor moves
     R: pd.DataFrame  # regime features at t
     end: pd.Series  # window end date for each t
+    regime_all: pd.DataFrame  # regime features for every day (incl. the last 10, which have no window)
 
     def known_before(self, date: str | pd.Timestamp) -> np.ndarray:
         """Boolean mask of windows fully observed on or before `date` (no lookahead)."""
@@ -124,7 +125,7 @@ def build_panel(prices: pd.DataFrame, fred: pd.DataFrame, h: int = C.HORIZON) ->
     end = pd.Series(prices.index, index=prices.index).shift(-h)
     # Keep windows whose factors, regime and end date are all known.
     ok = X.notna().all(axis=1) & R.notna().all(axis=1) & end.notna()
-    return Panel(prices, fred, Y[ok], X[ok], R[ok], end[ok])
+    return Panel(prices, fred, Y[ok], X[ok], R[ok], end[ok], R.dropna())
 
 
 def load_panel(refresh: bool = False) -> Panel:

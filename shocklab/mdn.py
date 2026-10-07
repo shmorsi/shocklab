@@ -10,6 +10,7 @@ for a diagonal Gaussian, dropping a dimension is exactly marginalising it.
 from __future__ import annotations
 
 import math
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -62,6 +63,14 @@ class Scaler:
     mean: np.ndarray
     std: np.ndarray
 
+    @staticmethod
+    def of(a: np.ndarray) -> "Scaler":
+        """Column mean/std ignoring NaNs; an all-missing column gets (0, 1), it is masked anyway."""
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)  # "mean of empty slice"
+            mean, std = np.nanmean(a, 0), np.nanstd(a, 0)
+        return Scaler(np.nan_to_num(mean), np.where(np.isfinite(std) & (std > 0), std, 1.0))
+
     def fwd(self, a: np.ndarray) -> np.ndarray:
         return (a - self.mean) / self.std
 
@@ -103,6 +112,20 @@ class MDNModel:
         comp = rng.choice(len(pi), size=n, p=pi / pi.sum())
         return mu[comp] + sd[comp] * rng.standard_normal((n, len(self.assets)))
 
+    def simulate_many(self, shocks: np.ndarray, regime: np.ndarray, seed: int = C.SEED) -> np.ndarray:
+        """One draw per row of `shocks` (n, 5): used for unconditional scenarios where
+        the factor moves themselves are bootstrapped from history."""
+        rng = np.random.default_rng(seed)
+        x = self.xs.fwd(np.column_stack([shocks, np.tile(regime, (len(shocks), 1))]))
+        with torch.no_grad():
+            log_pi, mu, log_sig = (a.numpy() for a in self.net(torch.as_tensor(x, dtype=torch.float32)))
+        pi = np.exp(log_pi)
+        # inverse-CDF pick of one component per row
+        comp = (rng.random((len(pi), 1)) > np.cumsum(pi, axis=1)).sum(axis=1).clip(max=pi.shape[1] - 1)
+        rows = np.arange(len(pi))
+        z = rng.standard_normal((len(pi), len(self.assets)))
+        return (mu[rows, comp] + np.exp(log_sig[rows, comp]) * z) * self.ys.std + self.ys.mean
+
     def logpdf(self, y: np.ndarray, shock: np.ndarray, regime: np.ndarray) -> float:
         """Joint log density in raw units = standardized log density - sum log(std_j)."""
         log_pi, mu, log_sig = self._params(shock, regime)
@@ -141,8 +164,7 @@ def train_mdn(panel: Panel, train_end: str, val_end: str, seed: int = C.SEED, re
     va = (panel.Y.index > pd.Timestamp(train_end)) & panel.known_before(val_end)
 
     Xtr, Ytr = feats.to_numpy()[tr], panel.Y.to_numpy()[tr]
-    xs = Scaler(Xtr.mean(0), Xtr.std(0))
-    ys = Scaler(np.nanmean(Ytr, 0), np.nanstd(Ytr, 0))
+    xs, ys = Scaler.of(Xtr), Scaler.of(Ytr)
 
     def tensors(rows):
         x = xs.fwd(feats.to_numpy()[rows])
@@ -191,7 +213,7 @@ def _fit_fixed_epochs(panel: Panel, end: str, epochs: int, seed: int, lr: float,
     feats = features(panel)
     rows = panel.known_before(end)
     X, Y = feats.to_numpy()[rows], panel.Y.to_numpy()[rows]
-    xs, ys = Scaler(X.mean(0), X.std(0)), Scaler(np.nanmean(Y, 0), np.nanstd(Y, 0))
+    xs, ys = Scaler.of(X), Scaler.of(Y)
     y = ys.fwd(Y)
     x_t = torch.as_tensor(xs.fwd(X), dtype=torch.float32)
     m_t = torch.as_tensor(~np.isnan(y), dtype=torch.float32)
