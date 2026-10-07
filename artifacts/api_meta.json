@@ -1,0 +1,63 @@
+{
+ "as_of": "2026-10-02",
+ "regime_date": "2026-10-02",
+ "baseline_assets": [
+  "SPY",
+  "QQQ",
+  "IWM",
+  "EFA",
+  "EEM",
+  "XLE",
+  "XLF",
+  "XLK",
+  "XLU",
+  "XLY",
+  "XLV",
+  "XLI",
+  "XLB",
+  "TLT",
+  "IEF",
+  "HYG",
+  "GLD",
+  "USO",
+  "JETS",
+  "XIU.TO",
+  "RY.TO",
+  "CNQ.TO",
+  "CP.TO",
+  "SU.TO"
+ ],
+ "baseline_nu": 21.57956565746634,
+ "mdn_file": "mdn_2027.pt",
+ "mdn_trained_through": "2026-12-31",
+ "factors": [
+  "oil",
+  "rates",
+  "usd",
+  "vix",
+  "credit"
+ ],
+ "factor_1_99_pct": {
+  "oil": [
+   -0.24188421773407973,
+   0.20722126947346445
+  ],
+  "rates": [
+   -45.000000000000014,
+   39.99999999999999
+  ],
+  "usd": [
+   -0.02501314097677735,
+   0.03032831491519387
+  ],
+  "vix": [
+   -0.4335214253340147,
+   0.590404335356389
+  ],
+  "credit": [
+   -39.00000000000002,
+   45.140000000000306
+  ]
+ },
+ "credit_series": "BAA10Y (Moody's Baa minus 10Y Treasury)"
+}
