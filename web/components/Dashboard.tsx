@@ -100,7 +100,7 @@ export default function Dashboard() {
       <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
         <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
           <ShockPanel shock={shock} setShock={onShock} events={events} activePreset={preset} onPreset={applyPreset}
-            regime={regime?.value ?? meta?.regime ?? null} regimeLabel={regime?.label ?? "today"} onResetRegime={() => setRegime(null)} />
+            regime={regime?.value ?? meta?.regime ?? null} regimeLabel={regime?.label ?? "today"} onResetRegime={() => setRegime(null)} range={meta?.shock_range} />
           <p className="px-1 text-[11px] leading-relaxed text-muted">
             Credit uses Moody&apos;s Baa−10Y spread: FRED now serves only 3 years of the ICE HY OAS. Shocks are 10-trading-day moves;
             the models were trained on realized moves of this size.

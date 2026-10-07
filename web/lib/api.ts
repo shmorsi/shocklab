@@ -61,6 +61,7 @@ export type Meta = {
   regime: Regime;
   mdn_trained_through: string;
   credit_series: string;
+  shock_range: Record<keyof Shock, [number, number]>;
 };
 export type ComparisonRow = Record<string, string | number | boolean | null>;
 export type Backtest = {

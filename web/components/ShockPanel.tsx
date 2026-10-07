@@ -20,7 +20,7 @@ export function clampShock(s: Shock): Shock {
   return out;
 }
 
-export default function ShockPanel({ shock, setShock, events, activePreset, onPreset, regime, regimeLabel, onResetRegime }: {
+export default function ShockPanel({ shock, setShock, events, activePreset, onPreset, regime, regimeLabel, onResetRegime, range }: {
   shock: Shock;
   setShock: (s: Shock) => void;
   events: EventReplay[];
@@ -29,6 +29,7 @@ export default function ShockPanel({ shock, setShock, events, activePreset, onPr
   regime: Regime | null;
   regimeLabel: string;
   onResetRegime: () => void;
+  range?: Record<keyof Shock, [number, number]>;
 }) {
   return (
     <Panel kicker="01" title="Macro shock" right={<span className="num text-[11px] text-muted">10-trading-day move</span>}>
@@ -37,10 +38,15 @@ export default function ShockPanel({ shock, setShock, events, activePreset, onPr
           const v = shock[s.key];
           const zeroPos = ((0 - s.min) / (s.max - s.min)) * 100;
           const pos = ((v - s.min) / (s.max - s.min)) * 100;
+          const r = range?.[s.key];
+          const beyond = r ? v < r[0] || v > r[1] : false;
           return (
             <label key={s.key} className="block">
               <div className="flex items-baseline justify-between text-xs">
-                <span className="text-ink-2">{s.label}</span>
+                <span className="text-ink-2">
+                  {s.label}
+                  {beyond && <span className="ml-2 text-[10px] text-amber" title={`Largest 10-day moves since 2007: ${r![0].toFixed(0)} to +${r![1].toFixed(0)}${s.unit}`}>▲ beyond history</span>}
+                </span>
                 <span className={`num text-sm ${v === 0 ? "text-muted" : "text-amber"}`}>
                   {v > 0 ? "+" : v < 0 ? "−" : ""}{Math.abs(v).toFixed(s.step < 1 ? 1 : 0)}{s.unit}
                 </span>
@@ -50,6 +56,11 @@ export default function ShockPanel({ shock, setShock, events, activePreset, onPr
                 <div className="pointer-events-none absolute top-[10px] h-[2px] bg-amber/70"
                   style={{ left: `${Math.min(zeroPos, pos)}%`, width: `${Math.abs(pos - zeroPos)}%` }} />
                 <div className="pointer-events-none absolute top-[6px] h-[10px] w-px bg-muted" style={{ left: `${zeroPos}%` }} />
+                {r && (
+                  // faint bracket = range of 10-day moves actually seen since 2007
+                  <div className="pointer-events-none absolute top-[16px] h-[3px] rounded-full bg-ink-2/25"
+                    style={{ left: `${((Math.max(r[0], s.min) - s.min) / (s.max - s.min)) * 100}%`, width: `${((Math.min(r[1], s.max) - Math.max(r[0], s.min)) / (s.max - s.min)) * 100}%` }} />
+                )}
                 <input type="range" min={s.min} max={s.max} step={s.step} value={v} aria-label={s.label}
                   onChange={(e) => setShock({ ...shock, [s.key]: Number(e.target.value) })} />
               </div>
@@ -57,7 +68,8 @@ export default function ShockPanel({ shock, setShock, events, activePreset, onPr
           );
         })}
       </div>
-      <div className="mt-4 border-t border-line pt-3">
+      <p className="mt-3 text-[10px] leading-relaxed text-muted">Grey strip under each slider = 10-day moves seen 2007–today. Beyond it, both models extrapolate.</p>
+      <div className="mt-3 border-t border-line pt-3">
         <div className="mb-2 text-[11px] uppercase tracking-widest text-muted">Replay a historical shock</div>
         <div className="flex flex-wrap gap-1.5">
           {events.map((e) => (

@@ -1,0 +1,10 @@
+# Render blueprint for the API (Docker). Set CORS_ORIGINS to your Vercel URL.
+services:
+  - type: web
+    name: shocklab-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: CORS_ORIGINS
+        value: https://your-app.vercel.app

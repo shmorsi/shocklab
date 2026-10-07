@@ -95,11 +95,14 @@ def main() -> None:
     np.savez_compressed(STATE_FILE, alpha=base.alpha, beta=base.beta, shape=base.shape, nu=base.nu,
                         regime=regime, shock_hist=shock_hist)
     hist_q = {f: [float(x) for x in np.quantile(panel.X[f], [0.01, 0.99])] for f in C.FACTORS}
+    # historical min/max of each 10-day move in slider units, so the UI can flag extrapolation
+    lo, hi = human_from_shock(panel.X[C.FACTORS].min().to_numpy()), human_from_shock(panel.X[C.FACTORS].max().to_numpy())
+    hist_range = {k: [lo[k], hi[k]] for k in lo}
     META_FILE.write_text(json.dumps({
         "as_of": str(as_of.date()), "regime_date": str(panel.regime_all.index[-1].date()),
         "baseline_assets": base.assets, "baseline_nu": base.nu,
         "mdn_file": model_path(latest_year).name, "mdn_trained_through": str(min(as_of, pd.Timestamp(f"{latest_year - 1}-12-31")).date()),
-        "factors": C.FACTORS, "factor_1_99_pct": hist_q,
+        "factors": C.FACTORS, "factor_1_99_pct": hist_q, "shock_range": hist_range,
         "credit_series": "BAA10Y (Moody's Baa minus 10Y Treasury)",
     }, indent=1))
     (C.RESULTS_DIR / "events.json").write_text(json.dumps(events_json(panel)))
