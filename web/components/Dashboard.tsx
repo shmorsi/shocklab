@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { api, type Backtest, type ComparisonRow, type EventReplay as Ev, type Meta, type ModelKey, type Regime, type Shock, type StressResponse } from "@/lib/api";
+import { api, STATIC, type Backtest, type ComparisonRow, type EventReplay as Ev, type Meta, type ModelKey, type Regime, type Shock, type StressResponse } from "@/lib/api";
 import { pct } from "@/lib/format";
 import { useDebounced } from "@/lib/hooks";
 import BacktestPanel from "./BacktestPanel";
@@ -66,8 +66,8 @@ export default function Dashboard() {
     return (
       <main className="relative z-10 mx-auto grid min-h-screen max-w-xl place-items-center px-4">
         <div className="rounded-md border border-line bg-panel p-6 text-sm">
-          <div className="num mb-2 text-amber">API unreachable</div>
-          <p className="text-ink-2">Start the API with <code className="num text-ink">make api</code> (port 8000), then reload.</p>
+          <div className="num mb-2 text-amber">{STATIC ? "Could not load model data" : "API unreachable"}</div>
+          <p className="text-ink-2">{STATIC ? "Reload the page; if it persists, the data files failed to download." : <>Start the API with <code className="num text-ink">make api</code> (port 8000), then reload.</>}</p>
           <p className="num mt-3 break-all text-[11px] text-muted">{bootErr}</p>
         </div>
       </main>
@@ -89,7 +89,7 @@ export default function Dashboard() {
         </div>
         <div className="flex flex-col items-end gap-2">
           <Segmented label="Model" value={model} onChange={setModel} options={MODEL_OPTS} />
-          {meta && <span className="num text-[11px] text-muted">data to {meta.as_of} · MDN trained through {meta.mdn_trained_through}</span>}
+          {meta && <span className="num text-[11px] text-muted">data to {meta.as_of} · MDN trained through {meta.mdn_trained_through}{STATIC ? " · models run in your browser" : ""}</span>}
         </div>
       </header>
 

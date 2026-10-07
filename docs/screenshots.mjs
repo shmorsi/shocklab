@@ -41,7 +41,7 @@ async function shot(file, { width, height, mobile = false, section = null, full 
 }
 
 await send("Page.enable");
-const out = "docs/screenshots";
+const out = process.env.OUT ?? "docs/screenshots";
 await shot(`${out}/hero.png`, { width: 1440, height: 900 });
 await shot(`${out}/desktop-full.png`, { width: 1440, height: 900, full: true });
 await shot(`${out}/optimizer.png`, { width: 1440, height: 900, section: "CVaR optimiser" });

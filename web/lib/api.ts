@@ -1,5 +1,9 @@
 // Typed client for the Shock Lab FastAPI service.
 export const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Static build (GitHub Pages): no server; models run in the browser (lib/engine.ts)
+// and the precomputed replays/backtest/comparison are JSON files under /data.
+export const STATIC = process.env.NEXT_PUBLIC_STATIC === "1";
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export type Shock = { oil_pct: number; rates_bp: number; usd_pct: number; vix_pct: number; credit_bp: number };
 export type Regime = { vix_level: number; avg_corr: number };
@@ -82,13 +86,29 @@ async function req<T>(path: string, body?: unknown, signal?: AbortSignal): Promi
   return res.json() as Promise<T>;
 }
 
-export const api = {
-  meta: () => req<Meta>("/meta"),
-  events: () => req<EventReplay[]>("/events"),
-  backtest: () => req<Backtest>("/backtest"),
-  comparison: () => req<ComparisonRow[]>("/comparison"),
-  stress: (weights: Record<string, number>, shock: Shock, regime: Regime | null, signal?: AbortSignal) =>
-    req<StressResponse>("/stress", { weights, shock, regime }, signal),
-  optimize: (body: { weights: Record<string, number>; shock: Shock; model: ModelKey; mode: string }) =>
-    req<OptimizeResponse>("/optimize", body),
-};
+const file = <T,>(name: string) => fetch(`${BASE}/data/${name}.json`).then((r) => r.json() as Promise<T>);
+
+export const api = STATIC
+  ? {
+      meta: () => file<Meta>("meta"),
+      events: () => file<EventReplay[]>("events"),
+      backtest: () => file<Backtest>("backtest"),
+      comparison: () => file<ComparisonRow[]>("comparison"),
+      stress: async (weights: Record<string, number>, shock: Shock, regime: Regime | null, signal?: AbortSignal) => {
+        const r = await (await import("./engine")).stress(weights, shock, regime);
+        if (signal?.aborted) throw new DOMException("aborted", "AbortError");
+        return r;
+      },
+      optimize: async (body: { weights: Record<string, number>; shock: Shock; model: ModelKey; mode: string }) =>
+        (await import("./engine")).optimize(body),
+    }
+  : {
+      meta: () => req<Meta>("/meta"),
+      events: () => req<EventReplay[]>("/events"),
+      backtest: () => req<Backtest>("/backtest"),
+      comparison: () => req<ComparisonRow[]>("/comparison"),
+      stress: (weights: Record<string, number>, shock: Shock, regime: Regime | null, signal?: AbortSignal) =>
+        req<StressResponse>("/stress", { weights, shock, regime }, signal),
+      optimize: (body: { weights: Record<string, number>; shock: Shock; model: ModelKey; mode: string }) =>
+        req<OptimizeResponse>("/optimize", body),
+    };

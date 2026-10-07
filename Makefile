@@ -1,6 +1,6 @@
 # Shock Lab. Python 3.11 venv in .venv; web/ uses npm.
 PY := .venv/bin/python
-.PHONY: setup data train backtest api web test screenshots all
+.PHONY: setup data train backtest api web static test screenshots all
 
 setup:            ## create venv + install Python and web deps
 	uv venv -p 3.11 .venv || python3.11 -m venv .venv
@@ -15,15 +15,21 @@ train:            ## walk-forward MDNs, then out-of-sample MDN vs baseline compa
 	$(PY) -m scripts.evaluate
 	$(PY) -m scripts.replay > results/replay_baseline.txt
 
-backtest:         ## monthly walk-forward backtest, then freeze API state
+backtest:         ## monthly walk-forward backtest, then freeze API state + static site data
 	$(PY) -m scripts.backtest
 	$(PY) -m scripts.export_api_state
+	$(PY) -m scripts.export_static
 
 api:              ## FastAPI on :8000 (needs artifacts/ + results/ from train/backtest)
 	.venv/bin/uvicorn api.main:app --reload --port 8000
 
 web:              ## Next.js dashboard on :3000 (expects the API on :8000)
 	cd web && npm run dev
+
+static:           ## export models to web/public/data + build the browser-only site into web/out
+	$(PY) -m scripts.export_static
+	cp web/node_modules/highs/build/highs.wasm web/public/highs.wasm
+	cd web && NEXT_PUBLIC_STATIC=1 NEXT_PUBLIC_BASE_PATH=/shocklab npx next build
 
 test:             ## pytest + TypeScript typecheck + lint
 	$(PY) -m pytest -q
