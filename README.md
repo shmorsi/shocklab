@@ -1,5 +1,7 @@
 # Shock Lab
 
+Built by [Sherif Morsi](https://github.com/shmorsi) · [Portfolio case study](https://shmorsi.github.io/#shocklab) · [Interactive browser demo](https://shmorsi.github.io/shocklab/)
+
 **Dial in a macro shock (oil, rates, USD, VIX, credit) and see the 10-day return distribution of a 24-asset portfolio, its VaR/CVaR and where the risk comes from, plus the CVaR-minimising hedge. A PyTorch mixture density network is benchmarked against a linear factor + Student-t model, with no lookahead.**
 
 **Live demo: https://shmorsi.github.io/shocklab/** runs entirely in your browser. Both models, the attribution and the CVaR optimiser (HiGHS compiled to WebAssembly) execute client-side, so there is no server and no cold start.
@@ -10,7 +12,7 @@ The headline finding is a negative one. **The MDN does not beat the linear basel
 
 | Optimiser | Event replay | Phone |
 |---|---|---|
-| ![](docs/screenshots/optimizer.png) | ![](docs/screenshots/replay.png) | <img src="docs/screenshots/mobile.png" width="220"> |
+| ![CVaR optimizer](docs/screenshots/optimizer.png) | ![Historical event replay](docs/screenshots/replay.png) | <img src="docs/screenshots/mobile.png" alt="Shock Lab mobile dashboard" width="220"> |
 
 Full page: [docs/screenshots/desktop-full.png](docs/screenshots/desktop-full.png) · Model honesty panel: [docs/screenshots/honesty.png](docs/screenshots/honesty.png)
 
